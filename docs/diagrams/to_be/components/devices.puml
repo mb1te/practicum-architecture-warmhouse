@@ -1,0 +1,33 @@
+@startuml Devices Service
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/refs/heads/master/C4_Component.puml
+
+Container_Boundary(devices_service, "Devices Service") {
+    Component(api, "API Controller", "REST API", "Обработка HTTP запросов")
+    Component(registry, "Device Registry", "Business Logic", "Регистрация и удаление устройств")
+    Component(commands, "Command Service", "Business Logic", "Отправка команд устройствам")
+    Component(states, "State Service", "Business Logic", "Отслеживание состояний")
+    Component(mqtt, "MQTT Client", "Messaging", "Связь с устройствами")
+    Component(db, "Data Access Layer", "Data Access", "Работа с БД")
+}
+
+ContainerDb(devices_db, "Devices DB", "PostgreSQL", "База данных устройств")
+System_Ext(api_gateway, "API Gateway", "NGINX")
+System_Ext(mqtt_broker, "MQTT Broker", "Mosquitto")
+System_Ext(iot_devices, "IoT Устройства", "Реле, датчики, свет")
+
+Rel(api_gateway, api, "HTTP запросы", "HTTP")
+Rel(api, registry, "Регистрация устройств")
+Rel(api, commands, "Отправка команд")
+Rel(api, states, "Получение состояния устройств")
+
+Rel(registry, db, "CRUD операции")
+Rel(commands, mqtt, "Отправка команд")
+Rel(states, db, "Сохранение состояний")
+
+Rel(mqtt, mqtt_broker, "Отправка команд устройствам", "MQTT")
+Rel(mqtt_broker, iot_devices, "Отправка команд устройствам", "MQTT")
+Rel(mqtt_broker, mqtt, "Получение статуса от устройств", "MQTT")
+Rel(mqtt, states, "Обновление состояния устройств в БД")
+
+Rel(db, devices_db, "SQL запросы", "SQL")
+@enduml

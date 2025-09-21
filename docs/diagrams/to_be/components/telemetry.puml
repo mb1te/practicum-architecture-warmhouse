@@ -1,0 +1,28 @@
+@startuml Telemetry Service
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/refs/heads/master/C4_Component.puml
+
+Container_Boundary(telemetry_service, "Telemetry Service") {
+    Component(api, "API Controller", "REST API", "Обработка HTTP запросов")
+    Component(telemetry, "Telemetry Service", "", "Сбор и обработка данных")
+    Component(analytics, "Analytics Service", "", "Аналитика и статистика")
+    Component(mqtt, "MQTT Client", "MQTT", "Получение данных от устройств")
+    Component(db, "Data Access Layer", "", "Работа с БД")
+}
+
+ContainerDb(telemetry_db, "Telemetry DB", "TimescaleDB", "База данных телеметрии")
+System_Ext(api_gateway, "API Gateway", "NGINX")
+System_Ext(mqtt_broker, "MQTT Broker", "Mosquitto")
+System_Ext(iot_devices, "IoT Устройства", "Датчики, реле, камеры")
+
+Rel(api_gateway, api, "HTTP запросы", "HTTP")
+Rel(api, telemetry, "Получение телеметрии")
+Rel(api, analytics, "Аналитические запросы")
+
+Rel(telemetry, mqtt, "Получение данных")
+Rel(telemetry, db, "Сохранение данных")
+
+Rel(analytics, db, "Получение данных")
+Rel(mqtt, mqtt_broker, "MQTT сообщения", "MQTT")
+Rel(mqtt_broker, iot_devices, "Получение телеметрии", "MQTT")
+Rel(db, telemetry_db, "SQL запросы", "SQL")
+@enduml

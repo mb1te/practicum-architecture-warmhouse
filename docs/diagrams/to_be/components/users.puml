@@ -1,0 +1,20 @@
+@startuml Users Service
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/refs/heads/master/C4_Component.puml
+
+Container_Boundary(users_service, "Users Service") {
+    Component(api, "API Controller", "REST API", "Обработка HTTP запросов")
+    Component(auth, "Auth Service", "", "Аутентификация и авторизация")
+    Component(users, "Users Service", "", "Управление пользователями")
+    Component(db, "Data Access Layer", "", "Работа с данными")
+}
+
+ContainerDb(users_db, "Users DB", "PostgreSQL", "База данных пользователей")
+System_Ext(api_gateway, "API Gateway", "NGINX")
+
+Rel(api_gateway, api, "HTTP запросы", "HTTP")
+Rel(api, auth, "Проверка авторизации")
+Rel(api, users, "Управление пользователями")
+Rel(auth, db, "Поиск пользователей")
+Rel(users, db, "CRUD операции")
+Rel(db, users_db, "SQL запросы", "SQL")
+@enduml

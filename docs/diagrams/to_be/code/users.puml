@@ -1,0 +1,46 @@
+@startuml Users Code
+class User {
+  +String id
+  +String email
+  +String passwordHash
+  +String firstName
+  +String lastName
+  +String role
+  +Date createdAt
+  +void register()
+  +void login()
+  +void updateProfile()
+}
+
+class UserController {
+  +String baseUrl
+  +void registerUser()
+  +void loginUser()
+  +void getUserProfile()
+  +void updateUserProfile()
+  +void deleteUser()
+}
+
+class AuthService {
+  +String secretKey
+  +void authenticate()
+  +void authorize()
+  +String generateToken()
+  +void validateToken()
+  +String hashPassword()
+}
+
+class UserRepository {
+  +Database db
+  +void create()
+  +User findById()
+  +User findByEmail()
+  +void update()
+  +void delete()
+}
+
+UserController --> User : has
+UserController --> AuthService : uses
+AuthService --> User : validates
+UserRepository --> User : stores
+@enduml
