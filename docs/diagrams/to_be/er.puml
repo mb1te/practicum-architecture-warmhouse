@@ -1,0 +1,138 @@
+@startuml ER diagram
+entity User {
+  * id : UUID
+  --
+  * email : VARCHAR(255)
+  * password_hash : VARCHAR(255)
+  * first_name : VARCHAR(100)
+  * last_name : VARCHAR(100)
+  * created_at : TIMESTAMP
+  * updated_at : TIMESTAMP
+  is_active : BOOLEAN
+}
+
+entity Device {
+  * id : UUID
+  --
+  * name : VARCHAR(255)
+  * type : ENUM(SENSOR, RELAY, LIGHT)
+  * model : VARCHAR(100)
+  * location : VARCHAR(255)
+  * mqtt_topic : VARCHAR(255)
+  * created_at : TIMESTAMP
+  * updated_at : TIMESTAMP
+  * user_id : UUID
+}
+
+entity DeviceState {
+  * id : UUID
+  --
+  * device_id : UUID
+  * state_value : JSON
+  * timestamp : TIMESTAMP
+}
+
+entity Telemetry {
+  * id : UUID
+  --
+  * device_id : UUID
+  * metric_type : VARCHAR(100)
+  * metric_value : DECIMAL(10,4)
+  * unit : VARCHAR(20)
+  * timestamp : TIMESTAMP
+  * metadata : JSON
+}
+
+entity Scenario {
+  * id : UUID
+  --
+  * name : VARCHAR(255)
+  * description : TEXT
+  * trigger_condition : JSON
+  * actions : JSON
+  * created_at : TIMESTAMP
+  * updated_at : TIMESTAMP
+  * user_id : UUID
+}
+
+entity ScenarioExecution {
+  * id : UUID
+  --
+  * scenario_id : UUID
+  * trigger_event : JSON
+  * started_at : TIMESTAMP
+}
+
+entity Notification {
+  * id : UUID
+  --
+  * user_id : UUID
+  * title : VARCHAR(255)
+  * message : TEXT
+  * type : ENUM(INFO, WARNING, ERROR, SUCCESS)
+  * status : ENUM(SENT, DELIVERED, FAILED)
+  * created_at : TIMESTAMP
+  * sent_at : TIMESTAMP
+  * device_token : VARCHAR(255)
+}
+
+entity Command {
+  * id : UUID
+  --
+  * device_id : UUID
+  * command_type : VARCHAR(100)
+  * command_data : JSON
+  * created_at : TIMESTAMP
+  * user_id : UUID
+}
+
+entity Camera {
+  * id : UUID
+  --
+  * name : VARCHAR(255)
+  * ip_address : VARCHAR(45)
+  * rtsp_url : VARCHAR(500)
+  * resolution : VARCHAR(20)
+  * status : ENUM(ONLINE, OFFLINE, ERROR)
+  * location : VARCHAR(255)
+  * created_at : TIMESTAMP
+  * updated_at : TIMESTAMP
+  * user_id : UUID
+}
+
+entity VideoRecording {
+  * id : UUID
+  --
+  * camera_id : UUID
+  * file_path : VARCHAR(500)
+  * start_time : TIMESTAMP
+  * end_time : TIMESTAMP
+  * created_at : TIMESTAMP
+}
+
+entity VideoStream {
+  * id : UUID
+  --
+  * camera_id : UUID
+  * stream_url : VARCHAR(500)
+  * quality : VARCHAR(20)
+  * started_at : TIMESTAMP
+  * ended_at : TIMESTAMP
+}
+
+User ||--o{ Device
+User ||--o{ Scenario
+User ||--o{ Notification
+User ||--o{ Command
+User ||--o{ Camera
+User ||--o{ VideoStream
+
+Device ||--o{ DeviceState
+Device ||--o{ Telemetry
+Device ||--o{ Command
+
+Camera ||--o{ VideoRecording
+Camera ||--o{ VideoStream
+
+Scenario ||--o{ ScenarioExecution
+@enduml

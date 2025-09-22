@@ -1,0 +1,15 @@
+@startuml Context As Is
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/refs/heads/master/C4_Context.puml
+
+Person(user, 'Пользователь')
+Person(warmhouse_sup, 'Тех специалист системы "Умный дом"')
+System(warmhouse, 'Система "Умный дом"', 'Позволяет управлять отоплением и отслеживать температуру')
+System_Ext(warm_system, 'Система отопления')
+System_Ext(temp_sensors, 'Датчик температуры')
+
+Rel(user, warmhouse, 'управляет отоплением')
+Rel(user, warmhouse, 'отслеживает температуру')
+Rel(warmhouse_sup, warmhouse, 'подключает новые датчики')
+Rel(warmhouse, warm_system, 'управляет системой отопления')
+Rel(warmhouse, temp_sensors, 'получает данные о температуре')
+@enduml

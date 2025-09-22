@@ -1,0 +1,898 @@
+openapi: 3.0.3
+info:
+  title: Умный дом SaaS API
+  description: API для управления умным домом
+  version: 1.0.0
+
+security:
+  - bearerAuth: []
+  - apiKey: []
+
+paths:
+  /api/v1/users/profile:
+    get:
+      summary: Получить профиль пользователя
+      tags: [Users]
+      responses:
+        '200':
+          description: Профиль пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    put:
+      summary: Обновить профиль пользователя
+      tags: [Users]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: Профиль обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /api/v1/users/register:
+    post:
+      summary: Регистрация нового пользователя
+      tags: [Users]
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegister'
+      responses:
+        '201':
+          description: Пользователь создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /api/v1/users/login:
+    post:
+      summary: Вход в систему
+      tags: [Users]
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+      responses:
+        '200':
+          description: Успешный вход
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+
+
+  /api/v1/devices:
+    get:
+      summary: Получить список устройств
+      tags: [Devices]
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [sensor, relay, light]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [online, offline]
+      responses:
+        '200':
+          description: Список устройств
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Device'
+
+    post:
+      summary: Добавить новое устройство
+      tags: [Devices]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceCreate'
+      responses:
+        '201':
+          description: Устройство создано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+
+  /api/v1/devices/{deviceId}:
+    get:
+      summary: Получить устройство по ID
+      tags: [Devices]
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Устройство
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+
+    put:
+      summary: Обновить устройство
+      tags: [Devices]
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceUpdate'
+      responses:
+        '200':
+          description: Устройство обновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+
+    delete:
+      summary: Удалить устройство
+      tags: [Devices]
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Устройство удалено
+
+  /api/v1/devices/{deviceId}/commands:
+    post:
+      summary: Отправить команду устройству
+      tags: [Devices]
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Command'
+      responses:
+        '200':
+          description: Команда отправлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Command'
+
+  /api/v1/devices/{deviceId}/state:
+    get:
+      summary: Получить состояние устройства
+      tags: [Devices]
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Состояние устройства
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceState'
+
+  /api/v1/telemetry/devices/{deviceId}/metrics:
+    get:
+      summary: Получить телеметрию устройства
+      tags: [Telemetry]
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: start_time
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: end_time
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: metric_type
+          in: query
+          schema:
+            type: string
+            enum: [temperature, humidity, pressure, motion]
+      responses:
+        '200':
+          description: Телеметрические данные
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Telemetry'
+
+  /api/v1/telemetry/analytics:
+    get:
+      summary: Получить аналитику
+      tags: [Telemetry]
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [hour, day, week, month]
+        - name: device_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Аналитические данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Analytics'
+
+  /api/v1/scenarios:
+    get:
+      summary: Получить список сценариев
+      tags: [Scenarios]
+      responses:
+        '200':
+          description: Список сценариев
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Scenario'
+
+    post:
+      summary: Создать сценарий
+      tags: [Scenarios]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScenarioCreate'
+      responses:
+        '201':
+          description: Сценарий создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scenario'
+
+  /api/v1/scenarios/{scenarioId}:
+    get:
+      summary: Получить сценарий по ID
+      tags: [Scenarios]
+      parameters:
+        - name: scenarioId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Сценарий
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scenario'
+
+    put:
+      summary: Обновить сценарий
+      tags: [Scenarios]
+      parameters:
+        - name: scenarioId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScenarioUpdate'
+      responses:
+        '200':
+          description: Сценарий обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scenario'
+
+    delete:
+      summary: Удалить сценарий
+      tags: [Scenarios]
+      parameters:
+        - name: scenarioId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Сценарий удален
+
+  /api/v1/video/cameras:
+    get:
+      summary: Получить список камер
+      tags: [Video]
+      responses:
+        '200':
+          description: Список камер
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Camera'
+
+    post:
+      summary: Добавить камеру
+      tags: [Video]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CameraCreate'
+      responses:
+        '201':
+          description: Камера добавлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Camera'
+
+  /api/v1/video/recordings:
+    get:
+      summary: Получить список записей
+      tags: [Video]
+      parameters:
+        - name: camera_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: start_time
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: end_time
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Список записей
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VideoRecording'
+
+    post:
+      summary: Начать запись видео
+      tags: [Video]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VideoRecordingStart'
+      responses:
+        '201':
+          description: Запись начата
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoRecording'
+
+  /api/v1/video/streams/{streamId}:
+    get:
+      summary: Получить URL стрима
+      tags: [Video]
+      parameters:
+        - name: streamId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: URL стрима
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoStream'
+
+  /api/v1/notifications:
+    get:
+      summary: Получить уведомления
+      tags: [Notifications]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Список уведомлений
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - email
+        - first_name
+        - last_name
+        - is_active
+
+    UserUpdate:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        is_active:
+          type: boolean
+
+    UserRegister:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        first_name:
+          type: string
+        last_name:
+          type: string
+      required:
+        - email
+        - password
+        - first_name
+        - last_name
+
+    UserLogin:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+
+
+    Device:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+          enum: [sensor, relay, light]
+        model:
+          type: string
+        location:
+          type: string
+        mqtt_topic:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - type
+
+    DeviceCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [sensor, relay, light]
+        model:
+          type: string
+        location:
+          type: string
+        mqtt_topic:
+          type: string
+      required:
+        - name
+        - type
+
+    DeviceUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        location:
+          type: string
+
+    Command:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        device_id:
+          type: string
+          format: uuid
+        command_type:
+          type: string
+        command_data:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - device_id
+        - command_type
+        - command_data
+
+    DeviceState:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        device_id:
+          type: string
+          format: uuid
+        state_value:
+          type: object
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - device_id
+        - state_value
+        - timestamp
+
+    Telemetry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        device_id:
+          type: string
+          format: uuid
+        metric_type:
+          type: string
+        metric_value:
+          type: number
+        unit:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+      required:
+        - device_id
+        - metric_type
+        - metric_value
+        - timestamp
+
+    Analytics:
+      type: object
+      properties:
+        period:
+          type: string
+        device_id:
+          type: string
+          format: uuid
+        metrics:
+          type: object
+        summary:
+          type: object
+
+    Scenario:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        trigger_condition:
+          type: object
+        actions:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - trigger_condition
+        - actions
+
+    ScenarioCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        trigger_condition:
+          type: object
+        actions:
+          type: object
+      required:
+        - name
+        - trigger_condition
+        - actions
+
+    ScenarioUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        trigger_condition:
+          type: object
+        actions:
+          type: object
+
+    Camera:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        ip_address:
+          type: string
+        rtsp_url:
+          type: string
+        resolution:
+          type: string
+        location:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - ip_address
+        - rtsp_url
+
+    CameraCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        ip_address:
+          type: string
+        rtsp_url:
+          type: string
+        resolution:
+          type: string
+        location:
+          type: string
+      required:
+        - name
+        - ip_address
+        - rtsp_url
+
+    VideoRecording:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        camera_id:
+          type: string
+          format: uuid
+        file_path:
+          type: string
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - camera_id
+        - file_path
+        - start_time
+        - end_time
+
+    VideoRecordingStart:
+      type: object
+      properties:
+        camera_id:
+          type: string
+          format: uuid
+        duration:
+          type: integer
+          description: Длительность записи в секундах
+          minimum: 1
+          maximum: 3600
+      required:
+        - camera_id
+
+    VideoStream:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        camera_id:
+          type: string
+          format: uuid
+        stream_url:
+          type: string
+        quality:
+          type: string
+        started_at:
+          type: string
+          format: date-time
+        ended_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - camera_id
+        - stream_url
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        message:
+          type: string
+        type:
+          type: string
+          enum: [info, warning, error, success]
+        created_at:
+          type: string
+          format: date-time
+        sent_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - user_id
+        - title
+        - message
+        - type

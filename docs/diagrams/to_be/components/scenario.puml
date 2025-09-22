@@ -1,0 +1,27 @@
+@startuml Scenario Service
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/refs/heads/master/C4_Component.puml
+
+Container_Boundary(scenario_service, "Scenario Service") {
+    Component(api, "API Controller", "REST API", "Обработка HTTP запросов")
+    Component(scenarios, "Scenario Service", "", "Управление сценариями")
+    Component(triggers, "Triggers Service", "", "Реакция на события и запуск сценариев")
+    Component(mqtt, "MQTT Client", "", "Получение событий")
+    Component(db, "Data Access Layer", "", "Работа с БД")
+}
+
+ContainerDb(scenario_db, "Scenario DB", "PostgreSQL", "База данных сценариев")
+System_Ext(api_gateway, "API Gateway", "NGINX")
+System_Ext(mqtt_broker, "MQTT Broker", "Mosquitto")
+System_Ext(devices_service, "Devices Service", "Управление устройствами")
+System_Ext(notification_service, "Notification Service", "Отправка уведомлений")
+
+Rel(api_gateway, api, "Создание, изменение, удаление сценариев", "HTTP")
+Rel(api, scenarios, "Управление сценариями")
+Rel(scenarios, db, "CRUD по сценариям")
+Rel(triggers, scenarios, "Получение сценариев")
+Rel(triggers, devices_service, "Отправка команд устройствам", "HTTP")
+Rel(triggers, notification_service, "Отправка уведомлений", "HTTP")
+Rel(mqtt_broker, mqtt, "События устройств", "MQTT")
+Rel(mqtt, triggers, "Передача события от устройства")
+Rel(db, scenario_db, "CRUD по сценариям, история запусков", "SQL")
+@enduml

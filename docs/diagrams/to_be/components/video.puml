@@ -1,0 +1,31 @@
+@startuml Video Service
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/refs/heads/master/C4_Component.puml
+
+Container_Boundary(video_service, "Video Service") {
+    Component(api, "API Controller", "REST API", "Обработка HTTP запросов")
+    Component(streaming, "Streaming Service", "", "Стриминг видео")
+    Component(recording, "Recording Service", "", "Запись видео")
+    Component(cameras, "Camera Service", "", "Управление камерами")
+    Component(storage, "Storage Service", "", "Хранение видеофайлов")
+    Component(db, "Data Access Layer", "", "Работа с БД")
+}
+
+ContainerDb(video_db, "Video DB", "PostgreSQL", "Метаданные видео")
+ContainerDb(video_storage, "Video Storage", "S3", "Файлы видео")
+System_Ext(api_gateway, "API Gateway", "NGINX")
+System_Ext(ip_cameras, "IP Камеры", "Камеры видеонаблюдения")
+
+Rel(api_gateway, api, "HTTP запросы", "HTTP")
+Rel(api, streaming, "Стриминг видео с камер")
+Rel(api, recording, "Запись видео с камер")
+Rel(api, cameras, "Управление камерами")
+
+Rel(streaming, ip_cameras, "Стриминг видео с камер", "RTSP")
+Rel(recording, ip_cameras, "Запись видео с камер", "RTSP")
+Rel(recording, storage, "Сохранение видео")
+
+Rel(cameras, db, "Управление камерами")
+Rel(storage, video_storage, "Файлы", "HTTP")
+Rel(storage, db, "Сохранение данных о записях")
+Rel(db, video_db, "SQL запросы", "SQL")
+@enduml

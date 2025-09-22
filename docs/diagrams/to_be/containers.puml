@@ -1,0 +1,59 @@
+@startuml To Be Containers
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/refs/heads/master/C4_Container.puml
+
+Person(user, 'Пользователь')
+
+System_Boundary(warm_house, 'Теплый дом') {
+    Container(mobileapp, 'Мобильное приложение', 'Kotlin/Swift', 'Управление устройствами, просмотр камер, настройка сценариев, получение уведомлений')
+    Rel(user, mobileapp, 'Управляет умным домом', 'HTTPS')
+    
+    Container(gateway, 'API Gateway', 'NGINX', 'Единая точка входа для всех запросов')
+    Rel(mobileapp, gateway, 'Отправляет запросы управления', 'HTTPS')
+    
+    Container(users_service, 'Users Service', 'Golang', 'Регистрация, аутентификация, управление правами доступа к устройствам')
+    ContainerDb(users_db, 'Users DB', 'PostgreSQL', 'Хранит данные о пользователях, настройки, права доступа к устройствам и историю активности')
+    Rel(users_service, users_db, 'Сервис сохраняет новые профили пользователей, обновляет настройки, проверяет права доступа', 'SQL')
+    Rel(gateway, users_service, 'Аутентификация, проверка прав доступа', 'HTTP')
+    
+    Container(devices_service, 'Devices Service', 'Golang', 'Управление устройствами, отслеживание их состояния, управление конфигурацией устройств')
+    ContainerDb(devices_db, 'Devices DB', 'PostgreSQL', 'Хранит информацию об устройствах, их конфигурации, текущем состоянии, историю команд')
+    Rel(devices_service, devices_db, 'Сервис сохраняет информацию о новых устройствах, обновляет их состояние, ведет историю команд', 'SQL')
+    Rel(gateway, devices_service, 'Передача команд по управлению устройствами', 'HTTP')
+    
+    Container(mqtt, 'MQTT Broker', 'Mosquitto', 'Брокер сообщений для IoT устройств, отправляет команды устройствам, получает телеметрию с устройств')
+    Rel(devices_service, mqtt, 'Отправка команд управления устройствам умного дома', 'MQTT')
+    
+    Container(video_service, 'Video Service', 'Golang', 'Принимает RTSP-потоки видео от камер, записывает видео, обеспечивает стриминг')
+    ContainerDb(video_db, 'Video DB', 'PostgreSQL', 'Хранит метаданные о видео, информацию о подключенных камерах')
+    ContainerDb(video_storage, 'Video Storage', 'S3', 'Облачное хранилище для видеозаписей с IP-камер')
+    Rel(video_service, video_db, 'Сервис сохраняет данные о записях', 'SQL')
+    Rel(video_service, video_storage, 'Сервис записывает видео файлы в облачное хранилище, управляет жизненным циклом записей', 'HTTP')
+    Rel(gateway, video_service, 'Запрос стриминга видео с камер', 'HTTP')
+    
+    Container(scenario_service, 'Scenario Service', 'Golang', 'Позволяет запускать триггеры по событиям устройств умного дома')
+    ContainerDb(scenario_db, 'Scenario DB', 'PostgreSQL', 'Хранит созданные сценарии, историю их запуска')
+    Rel(scenario_service, scenario_db, 'Сохраняет/изменяет сценарии', 'SQL')
+    Rel(gateway, scenario_service, 'Передача запросов по созданию/изменению сценариев', 'HTTP')
+    Rel(mqtt, scenario_service, 'Передача событий для запуска сценариев', 'MQTT')
+    
+    Container(notification_service, 'Notification Service', 'Golang', 'Отправляет push-уведомления пользователям, управляет настройками уведомлений')
+    ContainerDb(notification_db, 'Notification DB', 'PostgreSQL', 'Хранит настройки пользователей, шаблоны уведомлений, историю уведомлений')
+    Rel(notification_service, notification_db, 'Сохранение уведомлений', 'SQL')
+    Rel(scenario_service, notification_service, 'Отправляет уведомления', 'HTTP')
+    Rel(notification_service, mobileapp, 'Сервис отправляет push-уведомление пользователю', 'FCM')
+    
+    Container(telemetry_service, 'Telemetry Service', 'Golang', 'Собирает данные с устройств умного дома, предоставляет аналитику о его состоянии')
+    ContainerDb(telemetry_db, 'Telemetry DB', 'TimescaleDB', 'Хранит телеметрию с устройств умного дома, поддерживает аналитику')
+    Rel(telemetry_service, telemetry_db, 'Сохраняет полученную информацию с устройств', 'SQL')
+    Rel(gateway, telemetry_service, 'Просмотр данных с датчиков за нужный период', 'HTTP')
+    Rel(mqtt, telemetry_service, 'Передача телеметрии с устройств умного дома', 'MQTT')
+}
+
+System_Ext(iot_devices, 'IoT Устройства', 'Реле отопления, датчики температуры и влажности, свет, автоматические ворота')
+Rel(iot_devices, mqtt, 'Отправка данных с датчиков', 'MQTT')
+Rel(mqtt, iot_devices, 'Отправка команд устройствам умного дома', 'MQTT')
+
+System_Ext(ipcam, 'IP Камеры', 'Камеры видеонаблюдения с поддержкой RTSP стриминга')
+Rel(ipcam, mqtt, 'Телеметрия от камеры', 'MQTT')
+Rel(ipcam, video_service, 'Камера передает видео', 'RTSP')
+@enduml

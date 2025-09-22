@@ -1,0 +1,23 @@
+@startuml Notification Service
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/refs/heads/master/C4_Component.puml
+
+Container_Boundary(notification_service, "Notification Service") {
+    Component(api, "API Controller", "REST API", "Обработка HTTP запросов")
+    Component(notifications, "Notification Service", "", "Отправка push уведомлений")
+    Component(push, "Push Service", "", "Push уведомления")
+    Component(db, "Data Access Layer", "", "Работа с БД")
+}
+
+ContainerDb(notification_db, "Notification DB", "PostgreSQL", "База данных уведомлений")
+System_Ext(api_gateway, "API Gateway", "NGINX")
+System_Ext(fcm, "FCM Service", "Firebase Cloud Messaging")
+System_Ext(mobile_app, "Mobile App", "Мобильное приложение")
+
+Rel(api_gateway, api, "HTTP запросы", "HTTP")
+Rel(api, notifications, "Отправка уведомлений")
+Rel(notifications, push, "Push уведомления")
+Rel(push, fcm, "Push через FCM", "HTTP")
+Rel(fcm, mobile_app, "Push уведомления", "FCM")
+Rel(notifications, db, "Сохранение уведомлений")
+Rel(db, notification_db, "SQL запросы", "SQL")
+@enduml
